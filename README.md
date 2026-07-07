@@ -1,8 +1,8 @@
 # lyx_trav_safety_orin
 
-面向野外移动机器人导航的地形通过性与语义安全预测。
+2026/07/07
 
-本仓库是一个 ROS1/catkin 工作空间，使用的是真实野外移动机器人平台 Scout 2.0，集成了 ZED2i 感知、Fixposition RTK/里程计、SCOUT 底盘驱动、局部/全局地图构建、地形通过性与语义安全预测，以及基于预测结果的实车导航流程。
+本仓库为本人毕业设计《面向野外移动机器人导航的地形通过性与语义安全预测》代码自用留档。本仓库是一个 ROS1/catkin 工作空间，使用的是真实野外移动机器人平台 Scout 2.0，集成了 ZED2i 感知、Fixposition RTK/里程计、SCOUT 底盘驱动、局部/全局地图构建、地形通过性与语义安全预测，以及基于预测结果的实车导航流程。
 
 ## 项目结构
 
@@ -164,3 +164,12 @@ rosservice call /start_navigation
 - `src/trav_safety/src/checkpoints/` 已被 `.gitignore` 排除，请通过网盘单独下载。
 - `build/`、`devel/`、`logs/`、`.catkin_tools/`、`__pycache__/` 等本地构建与缓存文件不会提交。
 - 本仓库中的 `scout_ros`、`ugv_sdk`、`zed2i`、`fix_positon_ros1` 包含第三方驱动或 SDK 代码，请根据各自上游项目的许可协议使用。
+
+## 致谢
+
+特别感谢以下项目提供了思路与技术参考
+
+- [matval/wayfaster](https://github.com/matval/wayfaster)：地形通过性
+- [csiro-robotics/WildScenes](https://github.com/csiro-robotics/WildScenes)：野外语义分割
+- [mit-acl/mppi_numba](https://github.com/mit-acl/mppi_numba)：MPPI 实现
+- [BGU-CS-VIL/WTConv](https://github.com/BGU-CS-VIL/WTConv)：小波卷积
