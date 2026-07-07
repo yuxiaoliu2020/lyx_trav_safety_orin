@@ -1,0 +1,48 @@
+<launch>
+    <!-- 配置文件路径（YAML），用于 get_cfg -->
+    <arg name="config_file" default="$(find trav_safety)/src/config/infer.yaml" />
+
+    <!-- 模型权重路径，如果不设置则使用节点内默认参数 -->
+    <arg name="model_path" default="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+
+    <!-- 话题名参数，可根据实际情况修改 -->
+    <arg name="rgb_topic" default="/zed2i/zed_node/left/image_rect_color" />
+    <arg name="depth_topic" default="/zed2i/zed_node/depth/depth_registered" />
+    <arg name="pose_topic" default="/fixposition/odometry_enu" />
+
+    <!-- 发布话题名称参数 -->
+    <arg name="trav_map_topic" default="/traversability_map" />
+    <arg name="trav_viz_mu_topic" default="/traversability_map_viz/mu" />
+    <arg name="trav_viz_nu_topic" default="/traversability_map_viz/nu" />
+    <arg name="safety_map_topic" default="/safety_map" />
+    <arg name="safety_viz_topic" default="/safety_map_viz" />
+
+    <!-- 是否使用 CUDA AMP 混合精度推理（仅在 GPU 上有效） -->
+    <arg name="safety_head" default="true" />
+    <arg name="use_amp" default="true" />
+    
+    <!-- 单独启动trav_safety时要启动RViz，在nav_node中启动就不需要 -->
+    <!-- <node pkg="rviz" type="rviz" name="rviz" /> -->
+
+    <node pkg="trav_safety"
+          type="trav_safety_node.py"
+          name="trav_safety_node"
+          output="screen">
+
+        <!-- 将 launch 参数传给节点私有参数 -->
+        <param name="config_file" value="$(arg config_file)" />
+        <param name="model_path" value="$(arg model_path)" />
+
+        <param name="rgb_topic" value="$(arg rgb_topic)" />
+        <param name="depth_topic" value="$(arg depth_topic)" />
+        <param name="pose_topic" value="$(arg pose_topic)" />
+
+        <param name="trav_map_topic" value="$(arg trav_map_topic)" />
+        <param name="trav_viz_mu_topic" value="$(arg trav_viz_mu_topic)" />
+        <param name="trav_viz_nu_topic" value="$(arg trav_viz_nu_topic)" />
+        <param name="safety_map_topic" value="$(arg safety_map_topic)" />
+        <param name="safety_viz_topic" value="$(arg safety_viz_topic)" />
+
+        <param name="use_amp" value="$(arg use_amp)" />
+    </node>
+</launch>

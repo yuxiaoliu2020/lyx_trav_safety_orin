@@ -1,0 +1,43 @@
+先将小车开往开阔地方，浏览器用ip检查rtk是否正常运行，
+在正常运行时的第一次有效解的位置为原点，
+然后依次开往实验路点，用rostopic echo /fixposition/odometry_enu记录路点坐标，
+在start_realcar.launch中设置路点坐标，开到起点。
+
+编译指令：
+catkin build scout_base scout_bringup scout_description scout_msgs ugv_sdk trav_safety nav_realcar map_realcar fixposition_driver_ros1 zed_wrapper -DPYTHON_EXECUTABLE=/usr/bin/python3
+catkin build trav_safety nav_realcar map_realcar fixposition_driver_ros1 zed_wrapper -DPYTHON_EXECUTABLE=/usr/bin/python3
+
+map运行指令：
+开两个终端，分别：
+cd lyx_trav_safety
+conda activate lyx
+source devel/setup.bash
+第一个终端：
+./src/map_realcar/launch/start_map_realcar.sh
+局部地图感知稳定后，第二个终端：
+rosservice call /start_cap 开始采集全局地图
+rosservice call /end_cap 结束采集
+
+nav运行指令：
+开两个终端，分别：
+cd lyx_trav_safety
+conda activate lyx
+source devel/setup.bash
+第一个终端：
+roslaunch nav_realcar test_before_start.launch
+如果有图像能看到并且位姿打印无误，说明相机与RTK正常，检查后退出。
+第二个终端：
+先sudo modprobe gs_usb
+再sudo ip link set can0 up type can bitrate 500000
+roslaunch scout_base scout_base.launch
+roslaunch scout_bringup scout_teleop_keyboard.launch
+如果能够用键盘正常控制小车，说明小车底盘通讯正常，检查后退出。
+第一个终端：
+./src/nav_realcar/launch/start_realcar.sh
+稳定后，第二个终端：
+rosservice call /start_navigation
+
+安全头与非安全头模型更换：
+1改start_realcar.launch文件，把safety_head设为false，把checkpoint的导入改为对应模型；
+2改trav_safety_node.py的import，改为infermodule；
+3改infermodule中的Travnet导入。

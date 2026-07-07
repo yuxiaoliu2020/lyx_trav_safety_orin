@@ -1,0 +1,59 @@
+<launch>
+    <!-- <include file="$(find scout_base)/launch/scout_base.launch" /> -->
+    <include file="$(find fixposition_driver_ros1)/launch/tcp.launch" />
+    <include file="$(find zed_wrapper)/launch/zed2i.launch" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find map_realcar)/launch/1.rviz" />
+
+
+    <!-- 启动通过性+安全估计节点 -->
+    <!-- 切换模型时需同时切换model_path、safety_head，并且去改trav_safety_node中的infer_module导入及其module文件 -->
+    <include file="$(find trav_safety)/launch/trav_safety_realcar.launch">
+        <arg name="config_file" value="$(find trav_safety)/src/config/infer.yaml" />
+        <arg name="model_path" value="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+        <arg name="rgb_topic" value="/zed2i/zed_node/left/image_rect_color" />
+        <arg name="depth_topic" value="/zed2i/zed_node/depth/depth_registered" />
+        <arg name="pose_topic" value="/fixposition/odometry_enu" />
+        <arg name="trav_map_topic" value="/traversability_map" />
+        <arg name="trav_viz_mu_topic" value="/traversability_map_viz/mu" />
+        <arg name="trav_viz_nu_topic" value="/traversability_map_viz/nu" />
+        <arg name="safety_map_topic" value="/safety_map" />
+        <arg name="safety_viz_topic" value="/safety_map_viz" />
+        <arg name="use_amp" value="true" />
+        <arg name="safety_head" value="true" />
+    </include>
+
+    <!-- 启动全局建图节点 -->
+    <node pkg="map_realcar" type="map_node.py" name="global_mapping_node" output="screen">
+        <!-- 话题配置（与 trav_safety 输出对齐） -->
+        <param name="pose_topic" value="/fixposition/odometry_enu" />
+        <param name="safety_map_topic" value="/safety_map" />
+        <param name="traversability_map_topic" value="/traversability_map" />
+
+        <!-- 地图配置 -->
+        <param name="global_frame" value="map" />
+        <param name="global_resolution" value="0.1" />
+         <!-- 注意，改地图尺寸时记得把地图原点也改了，即地图左下角在map坐标系的位置(m) -->
+        <param name="global_size" value="6000" />
+        <param name="global_origin_x" value="-300.0" />
+        <param name="global_origin_y" value="-300.0" />
+
+        <!-- ROI 与停稳判定 -->
+        <param name="roi_front_min" value="1.0" />
+        <param name="roi_front_max" value="10.0" />
+        <param name="stop_lin_thresh" value="0.01" />
+        <param name="stop_ang_thresh" value="0.01" />
+        <param name="stable_time" value="2.0" />
+        <param name="map_lag_guard" value="1.0" />
+        <param name="speed_window_size" value="5" />
+
+        <!-- 发布与保存 -->
+        <param name="publish_rate" value="0.5" />
+        <param name="traj_min_dist" value="0.05" />
+        <param name="save_outputs" value="true" />
+        <param name="save_dir" value="$(find map_realcar)" />
+        <param name="save_interval" value="20.0" />
+
+        <!-- 上游 origin 不可靠，覆盖局部原点（前8后2、左右各5：-2,-5） -->
+        <rosparam param="local_origin_override">[-2.0, -5.0]</rosparam>
+    </node>
+</launch>

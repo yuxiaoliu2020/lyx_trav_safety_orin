@@ -1,0 +1,79 @@
+<launch>
+    <param name="/use_sim_time" value="true" />
+    <arg name="auto_start" default="false" />
+    <arg name="use_nmpc" default="true" />
+    <!-- 步骤1：发布静态坐标变换 -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="enu_to_map" 
+          args="0 0 0 0 0 0 1 FP_ENU0 map" /> -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="poi_to_base" 
+          args="0 0 0 0 0 0 1 FP_POI base_link" /> -->
+
+    <!-- 步骤2：启动动态坐标变换发布节点 -->
+    <!-- <node pkg="nav_realcar" type="tf_broadcaster.py" name="fp_tf_broadcaster" output="screen">
+        <param name="pose_topic" value="/fixposition/odometry_enu" />
+    </node> -->
+
+    <!-- 步骤3：启动RViz可视化 -->
+    <node pkg="rviz" type="rviz" name="rviz" />
+
+    <!-- 步骤4：启动通过性+安全估计节点（替代原trav_risk_fusion） -->
+    <include file="$(find trav_safety)/launch/trav_safety.launch">
+        <arg name="config_file" value="$(find trav_safety)/src/config/infer.yaml" />
+        <arg name="model_path" value="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+        <arg name="rgb_topic" value="/zed2i/zed_node/left/image_rect_color" />
+        <arg name="depth_topic" value="/zed2i/zed_node/depth/depth_registered" />
+        <arg name="pose_topic" value="/fixposition/odometry_enu" />
+        <arg name="trav_map_topic" value="/traversability_map" />
+        <arg name="trav_viz_mu_topic" value="/traversability_map_viz/mu" />
+        <arg name="trav_viz_nu_topic" value="/traversability_map_viz/nu" />
+        <arg name="safety_map_topic" value="/safety_map" />
+        <arg name="safety_viz_topic" value="/safety_map_viz" />
+        <arg name="use_amp" value="true" />
+        <arg name="safety_head" value="true" />
+    </include>
+
+    <!-- 步骤5：启动导航节点 -->
+    <node pkg="nav_realcar" type="nav_node.py" name="mppi_navigation_node" output="screen">
+        <!-- 目标位置，/fixposition/odometry_enu坐标系下，根据实际位置修改 -->
+        <rosparam param="waypoints_x">[-10.22, -12.49, -14.56]</rosparam>
+        <rosparam param="waypoints_y">[5.78, 13.93, 23.83]</rosparam>
+        
+        <!-- 话题配置 -->
+        <param name="pose_topic" value="/fixposition/odometry_enu" />
+        <param name="safety_map_topic" value="/safety_map" />
+        <param name="traversability_map_topic" value="/traversability_map" />
+        
+        <!-- MPPI+NMPC导航参数-->
+        <param name="auto_start" value="$(arg auto_start)" />
+        <param name="use_nmpc" value="$(arg use_nmpc)" />
+        
+        <!-- 导航参数-->
+        <param name="control_rate" value="10.0" />
+        <param name="goal_threshold" value="2.0" />
+        <param name="lookahead_distance" value="3.0" />
+        <param name="traj_min_dist" value="0.05" />
+        
+        <!-- MPPI参数-->
+        <param name="mppi_horizon" value="100" />
+        <param name="mppi_dt" value="0.1" />
+        <param name="mppi_num_samples" value="1024" />
+        <param name="mppi_iterations" value="8" />
+        <param name="safety_weight" value="0.5" />
+        <param name="smooth_v_weight" value="2.0" />
+        <param name="smooth_w_weight" value="5.0" />
+
+        <!-- NMPC参数 -->
+        <param name="use_nmpc" value="$(arg use_nmpc)" />
+        <!-- 状态跟踪误差权重，越大机器人越严格跟随规划路径 -->
+        <param name="nmpc_Q_x" value="1.5" />
+        <param name="nmpc_Q_y" value="1.5" />
+        <param name="nmpc_Q_th" value="1.0" />
+        <!-- 控制跟踪误差权重，越大控制越平滑、响应越慢 -->
+        <param name="nmpc_R_v" value="0.2" />
+        <param name="nmpc_R_w" value="0.1" />
+        <!-- 终端状态误差权重，越大能够越保证预测终点的准确性，但会牺牲短期轨迹质量 -->
+        <param name="nmpc_QN_x" value="1.0" />
+        <param name="nmpc_QN_y" value="1.0" />
+        <param name="nmpc_QN_th" value="1.0" />
+    </node>
+</launch>

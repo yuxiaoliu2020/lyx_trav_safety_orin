@@ -1,0 +1,55 @@
+<launch>
+    <!-- 回放 rosbag 时的离线全局建图 -->
+    <!-- 可选：加载 TF/传感器回放前的必要节点，例如 rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find map_realcar)/launch/1.rviz" />
+
+    <!-- 启动通过性+安全估计节点 -->
+    <!-- 切换模型时需同时切换model_path、safety_head，并且去改trav_safety_node中的infer_module导入及其module文件 -->
+    <include file="$(find trav_safety)/launch/trav_safety_realcar.launch">
+        <arg name="config_file" value="$(find trav_safety)/src/config/infer.yaml" />
+        <arg name="model_path" value="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+        <arg name="rgb_topic" value="/zed2i/zed_node/left/image_rect_color" />
+        <arg name="depth_topic" value="/zed2i/zed_node/depth/depth_registered" />
+        <arg name="pose_topic" value="/fixposition/odometry_enu" />
+        <arg name="trav_map_topic" value="/traversability_map" />
+        <arg name="trav_viz_mu_topic" value="/traversability_map_viz/mu" />
+        <arg name="trav_viz_nu_topic" value="/traversability_map_viz/nu" />
+        <arg name="safety_map_topic" value="/safety_map" />
+        <arg name="safety_viz_topic" value="/safety_map_viz" />
+        <arg name="use_amp" value="true" />
+        <arg name="safety_head" value="true" />
+    </include>
+
+    <!-- 离线全局建图节点：按运动量触发融合 -->
+    <node pkg="map_realcar" type="map_node_offline.py" name="global_mapping_offline_node" output="screen">
+        <!-- 话题配置（与 trav_safety bag 中一致） -->
+        <param name="pose_topic" value="/fixposition/odometry_enu" />
+        <param name="safety_map_topic" value="/safety_map" />
+        <param name="traversability_map_topic" value="/traversability_map" />
+
+        <!-- 地图配置：800m x 800m @0.1m 分辨率。记得与 bag 场地匹配 -->
+        <param name="global_frame" value="map" />
+        <param name="global_resolution" value="0.1" />
+        <param name="global_size" value="6000" />
+        <param name="global_origin_x" value="-300.0" />
+        <param name="global_origin_y" value="-300.0" />
+
+        <!-- ROI 设置，与在线版保持一致 -->
+        <param name="roi_front_min" value="1.0" />
+        <param name="roi_front_max" value="10.0" />
+
+        <!-- 运动触发阈值（离线版关键参数） -->
+        <param name="fuse_dist_thresh" value="5.0" />
+        <param name="fuse_yaw_thresh_deg" value="20.0" />
+
+        <!-- 发布与保存 -->
+        <param name="publish_rate" value="0.5" />
+        <param name="traj_min_dist" value="0.05" />
+        <param name="save_outputs" value="true" />
+        <param name="save_dir" value="$(find map_realcar)" />
+        <param name="save_interval" value="20.0" />
+
+        <!-- 覆盖局部原点：前8后2、左右各5：-2,-5 -->
+        <rosparam param="local_origin_override">[-2.0, -5.0]</rosparam>
+    </node>
+</launch>

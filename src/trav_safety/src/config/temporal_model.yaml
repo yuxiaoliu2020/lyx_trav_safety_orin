@@ -1,0 +1,42 @@
+TAG: 'temporal'
+
+DATASET:
+    TRAIN_DATA: ['dataset/zed2/data_train', 'dataset/realsense/data_train']
+    VALID_DATA: ['dataset/zed2/data_valid', 'dataset/realsense/data_valid']
+    TEST_DATA:  ['dataset/zed2/data_valid', 'dataset/realsense/data_valid']
+
+OPTIMIZER:
+    LR: 0.0001
+    WEIGHT_DECAY: 0.0001
+
+TRAINING:
+    BATCHSIZE: 4
+    WORKERS: 4
+    EPOCHS: 20
+    VERBOSE: False                      # 是否打印训练信息
+    GAMMA: 1.0
+    DEPTH_WEIGHT: 0.1
+    HORIZON: 300                        # 时间窗口长度
+    DT: 0.1                             # 采样时间间隔
+
+INFERENCE:
+    BATCHSIZE: 4
+    WORKERS: 4
+
+MODEL:
+    TIME_LENGTH: 6                      # 输入batch包含的图片帧数
+    DOWNSAMPLE: 8                       # 下采样倍数
+    LATENT_DIM: 64
+    INPUT_SIZE: [320, 180]              # 输入图像尺寸
+    PREDICT_DEPTH: True                 # 是否预测深度
+    TRAIN_DEPTH: True                   # 是否训练深度
+    FUSE_PCLOUD: True                   # 是否融合点云
+    GRID_BOUNDS: {
+        'xbound': [-2.0, 8.0, 0.1],
+        'ybound': [-5.0, 5.0, 0.1],
+        'zbound': [-1.0, 2.0, 0.2],
+        'dbound': [ 0.3, 8.0, 0.2]}     # 网格边界
+
+AUGMENTATIONS:
+    MAX_TRANSLATION: 0.0                # 最大平移
+    MAX_ROTATION: 0.0                   # 最大旋转

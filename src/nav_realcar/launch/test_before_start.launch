@@ -1,0 +1,22 @@
+<launch>
+    <include file="$(find scout_base)/launch/scout_base.launch" />
+    <!-- <include file="$(find fixposition_driver_ros1)/launch/tcp.launch" /> -->
+    <include file="$(find zed_wrapper)/launch/zed2i.launch" />
+    <node pkg="rviz" type="rviz" name="rviz" />
+
+    <!-- 启动通过性+安全估计节点 -->
+    <include file="$(find trav_safety)/launch/trav_safety_realcar.launch">
+        <arg name="config_file" value="$(find trav_safety)/src/config/infer.yaml" />
+        <arg name="model_path" value="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+        <arg name="rgb_topic" value="/zed2i/zed_node/left/image_rect_color" />
+        <arg name="depth_topic" value="/zed2i/zed_node/depth/depth_registered" />
+        <arg name="pose_topic" value="/fixposition/odometry_enu" />
+        <arg name="trav_map_topic" value="/traversability_map" />
+        <arg name="trav_viz_mu_topic" value="/traversability_map_viz/mu" />
+        <arg name="trav_viz_nu_topic" value="/traversability_map_viz/nu" />
+        <arg name="safety_map_topic" value="/safety_map" />
+        <arg name="safety_viz_topic" value="/safety_map_viz" />
+        <arg name="use_amp" value="true" />
+        <arg name="safety_head" value="true" />
+    </include>
+</launch>

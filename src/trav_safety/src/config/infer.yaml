@@ -1,0 +1,38 @@
+TAG: 'temporal'
+
+DATASET:
+    # TEST_DATA:  ['dataset/zed2/data_valid', 'dataset/realsense/data_valid']
+    INPUT_FOLDER: '/home/lyx/WildScenes_Dataset/offroad_dataset/sequence1'
+    OUTPUT_FOLDER: '/home/lyx/WildScenes_Dataset/offroad_dataset/sequence1_results'
+    # INPUT_FOLDER: '/home/lyx/wayfaster/inputs'
+    # OUTPUT_FOLDER: '/home/lyx/WildScenes_Dataset/offroad_dataset/wayfaster_results'
+
+
+TRAINING:
+    HORIZON: 300                        # 时间窗口长度
+    DT: 0.1                             # 采样时间间隔
+
+INFERENCE:
+    BATCHSIZE: 4
+    WORKERS: 4
+
+MODEL:
+    # LOAD_NETWORK: "checkpoints/double_WTConv.ckpt"  # WSTNet
+    # LOAD_NETWORK: "checkpoints/STANet.ckpt"  # STANet
+    # LOAD_NETWORK: "checkpoints/wayfaster.ckpt"  # Wayfaster
+    # LOAD_NETWORK: "checkpoints/safety_bev.ckpt"  # WSTNet_safety_bev
+    # LOAD_NETWORK: "checkpoints/safety_final2.ckpt"  # WSTNet_safety_line
+    LOAD_NETWORK: "checkpoints/safety_bev_fs.ckpt"  # 预训练模型路径
+    TIME_LENGTH: 6                      # 输入batch包含的图片帧数
+    DOWNSAMPLE: 8                       # 下采样倍数
+    INPUT_SIZE: [320, 180]              # 模型输入图像尺寸，不要修改
+    LATENT_DIM: 64
+    PREDICT_DEPTH: True                 # 是否预测深度
+    FUSE_PCLOUD: True                   # 是否融合点云
+    GRID_BOUNDS: {
+        'xbound': [-2.0, 8.0, 0.1],
+        'ybound': [-5.0, 5.0, 0.1],
+        'zbound': [-1.0, 2.0, 0.2],
+        'dbound': [ 0.3, 8.0, 0.2]}     # 网格边界
+
+SEED: 42

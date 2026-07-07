@@ -1,0 +1,88 @@
+<launch>
+    <include file="$(find scout_base)/launch/scout_base.launch" />
+    <include file="$(find fixposition_driver_ros1)/launch/tcp.launch" />
+    <include file="$(find zed_wrapper)/launch/zed2i.launch" />
+    <arg name="auto_start" default="false" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find nav_realcar)/launch/1.rviz" />
+
+
+    <!-- 启动通过性+安全估计节点 -->
+    <include file="$(find trav_safety)/launch/trav_safety_realcar.launch">
+        <arg name="config_file" value="$(find trav_safety)/src/config/infer.yaml" />
+        <arg name="model_path" value="$(find trav_safety)/src/checkpoints/safety_bev_fs.ckpt" />
+        <arg name="rgb_topic" value="/zed2i/zed_node/left/image_rect_color" />
+        <arg name="depth_topic" value="/zed2i/zed_node/depth/depth_registered" />
+        <arg name="pose_topic" value="/fixposition/odometry_enu" />
+        <arg name="trav_map_topic" value="/traversability_map" />
+        <arg name="trav_viz_mu_topic" value="/traversability_map_viz/mu" />
+        <arg name="trav_viz_nu_topic" value="/traversability_map_viz/nu" />
+        <arg name="safety_map_topic" value="/safety_map" />
+        <arg name="safety_viz_topic" value="/safety_map_viz" />
+        <arg name="use_amp" value="true" />
+        <arg name="safety_head" value="true" />
+    </include>
+
+    <!-- 启动导航节点 -->
+        <node pkg="nav_realcar" type="nav_node.py" name="mppi_navigation_node" output="screen">
+        <!-- 目标位置，/fixposition/odometry_enu坐标系下，根据实际位置修改 -->
+        <rosparam param="waypoints_x">[12.0964, 10.4902]</rosparam>
+        <rosparam param="waypoints_y">[-10.0632, -43.2928]</rosparam>
+
+        <!-- 调试：是否使用“前方3m测试目标”替代全局路径 -->
+        <param name="use_front_test_waypoint" value="false" />
+
+        <!-- 话题配置（与 trav_safety 输出对齐） -->
+        <param name="pose_topic" value="/fixposition/odometry_enu" />
+        <param name="safety_map_topic" value="/safety_map" />
+        <param name="traversability_map_topic" value="/traversability_map" />
+        
+        <!-- 导航控制开关 -->
+        <param name="auto_start" value="$(arg auto_start)" />
+
+        <!-- 导航 / MPPI 基本参数 -->
+        <param name="control_rate" value="10.0" />
+        <param name="goal_threshold" value="2.0" />
+        <param name="mppi_horizon" value="100" />
+        <param name="mppi_dt" value="0.1" />
+        <param name="mppi_num_samples" value="1024" />
+        <param name="mppi_iterations" value="8" />
+
+        <!-- 轨迹记录采样距离 -->
+        <param name="traj_min_dist" value="0.05" />
+
+        <!-- 主要调参部分——————起始-->
+        <!-- 轨迹前瞻距离（米） -->
+        <param name="lookahead_dist" value="5.0" />
+
+        <!-- 控制噪声 -->
+        <param name="noise_sigma_v" value="0.30" />
+        <param name="noise_sigma_w" value="0.20" />
+
+        <!-- 单步增量限制（Δu） -->
+        <param name="max_delta_v" value="0.1" />
+        <param name="max_delta_w" value="0.1" />
+
+        <!-- 控制边界 -->
+        <param name="v_min" value="0.2" />
+        <param name="v_max" value="0.7" />
+        <param name="w_min" value="-0.3" />
+        <param name="w_max" value="0.3" />
+
+        <!-- MPPI 温度 -->
+        <param name="lambda" value="0.2" />
+
+        <!-- NMPC 二次型权重（你现在的 MPPI 实现里用的是这组） -->
+        <param name="q_pos" value="1.0" />
+        <param name="q_theta" value="0.1" />
+        <param name="qN_pos" value="2.0" />
+        <param name="qN_theta" value="0.2" />
+        <param name="r_v" value="0.02" />
+        <param name="r_w" value="0.03" />
+
+        <!-- μ/ν 与 safety 权重 -->
+        <param name="w_mu" value="0.5" />
+        <param name="w_nu" value="0.2" />
+        <param name="w_safety" value="0.2" />
+        <!-- 主要调参部分——————结束-->
+    </node>
+</launch>

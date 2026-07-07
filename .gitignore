@@ -1,0 +1,30 @@
+# ROS/catkin build outputs
+build/
+devel/
+install/
+logs/
+.catkin_tools/
+
+# Large model checkpoints
+src/trav_safety/src/checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Runtime and editor files
+.vscode/
+.idea/
+*.log
+*.bag
+*.db3
+*.tmp
+
+# OS metadata
+.DS_Store
+Thumbs.db
